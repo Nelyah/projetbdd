@@ -39,9 +39,9 @@ BEGIN
     FROM types_operation
     WHERE type='virement';
 
-    INSERT INTO operations (type_operation_id,date,montant,source,destination)
+    INSERT INTO operations (type_operation_id,date,montant,source_id,destination_id)
         VALUES(type_id_operation,cur_date,montant_vir,id_compte,dest_id_compte);
-    INSERT INTO operations (type_operation_id,date,montant,source,destination)
+    INSERT INTO operations (type_operation_id,date,montant,source_id,destination_id)
         VALUES(type_id_operation,cur_date,montant_vir,dest_id_compte,id_compte);
 
     -- On regarde si la personne fait un virement sur un de ses comptes
@@ -56,7 +56,7 @@ BEGIN
         SELECT id INTO type_id_operation
         FROM types_operations
         WHERE type='forfait virement';
-        INSERT INTO operation(type_operation_id,date,montant,source,destination)
+        INSERT INTO operation(type_operation_id,date,montant,source_id,destination_id)
             VALUES(type_id_operation,cur_date,1,id_compte,NULL);
     END IF;
 

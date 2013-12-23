@@ -28,6 +28,8 @@ CREATE TABLE clients (
 CREATE TABLE types_compte (
   id SERIAL NOT NULL,
   type VARCHAR(150) NOT NULL,
+  taux_interet FLOAT NOT NULL DEFAULT 0,
+  CONSTRAINT chk_taux_interet CHECK (taux_interet >= 0),
   PRIMARY KEY (id));
 
 
@@ -203,6 +205,7 @@ CREATE TABLE interdit_bancaire(
 INSERT INTO types_compte (type) VALUES('compte courant');
 INSERT INTO types_compte (type) VALUES('livret jeune');
 INSERT INTO types_operation (type) VALUES ('virement');
+INSERT INTO types_operation (type) VALUES ('paiement différé');
 INSERT INTO types_operation (type) VALUES ('forfait virement');
 INSERT INTO types_operation (type) VALUES ('forfait virement set');
 INSERT INTO types_operation (type) VALUES ('paiement');
@@ -212,5 +215,7 @@ INSERT INTO types_operation (type) VALUES ('interet');
 INSERT INTO types_operation (type) VALUES ('agios');
 INSERT INTO types_carte (nom, cotisations, plafond_periodique,plafond_paiement,plafond_periodique_etranger, plafond_paiement_etranger)
         VALUES ('carte de retrait',15,300,50,200,40);
+INSERT INTO types_carte (nom, cotisations, plafond_periodique,plafond_paiement,plafond_periodique_etranger, plafond_paiement_etranger)
+        VALUES ('carte débit différé',0,70,0,0,0);
 INSERT INTO types_carte (nom, cotisations, plafond_periodique,plafond_paiement,plafond_periodique_etranger, plafond_paiement_etranger)
         VALUES ('carte de paiement',30,6000,700,4000,500);
