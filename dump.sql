@@ -145,7 +145,8 @@ CREATE TABLE operations (
   date DATE NOT NULL,
   montant REAL NOT NULL,
   source_id INTEGER NULL,
-  destination_id INTEGER NULL,
+  destination_id INTEGER NULL
+  extra INTEGER NULL,
   PRIMARY KEY (id),
   CONSTRAINT fk_operations_type_operation1
     FOREIGN KEY (type_operation_id)
