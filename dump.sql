@@ -1,4 +1,4 @@
-DROP TABLE clients CASCADE;
+--DROP TABLE clients CASCADE;
 DROP TABLE types_compte CASCADE;
 DROP TABLE comptes CASCADE;
 DROP TABLE types_carte CASCADE;
@@ -145,7 +145,7 @@ CREATE TABLE operations (
   date DATE NOT NULL,
   montant REAL NOT NULL,
   source_id INTEGER NULL,
-  destination_id INTEGER NULL
+  destination_id INTEGER NULL,
   extra INTEGER NULL,
   PRIMARY KEY (id),
   CONSTRAINT fk_operations_type_operation1
