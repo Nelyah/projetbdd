@@ -79,7 +79,7 @@ CREATE TABLE types_carte (
 -- Table cartes
 -- -----------------------------------------------------
 CREATE TABLE cartes (
-  id SERIAL NOT NULL,
+  id VARCHAR(16) NOT NULL,
   type_carte_id INTEGER NOT NULL,
   compte_id INTEGER NOT NULL,
   date_exp DATE NOT NULL,
@@ -209,7 +209,7 @@ INSERT INTO types_operation (type) VALUES ('virement');
 INSERT INTO types_operation (type) VALUES ('paiement différé');
 INSERT INTO types_operation (type) VALUES ('forfait virement');
 INSERT INTO types_operation (type) VALUES ('forfait virement set');
-INSERT INTO types_operation (type) VALUES ('paiement');
+INSERT INTO types_operation (type) VALUES ('paiement carte');
 INSERT INTO types_operation (type) VALUES ('retrait');
 INSERT INTO types_operation (type) VALUES ('cheque');
 INSERT INTO types_operation (type) VALUES ('interet');
@@ -217,6 +217,8 @@ INSERT INTO types_operation (type) VALUES ('agios');
 INSERT INTO types_carte (nom, cotisations, plafond_periodique,plafond_paiement,plafond_periodique_etranger, plafond_paiement_etranger)
         VALUES ('carte de retrait',15,300,50,200,40);
 INSERT INTO types_carte (nom, cotisations, plafond_periodique,plafond_paiement,plafond_periodique_etranger, plafond_paiement_etranger)
-        VALUES ('carte débit différé',0,70,0,0,0);
+        VALUES ('carte débit différé',70,0,0,0,0);
+INSERT INTO types_carte (nom, cotisations, plafond_periodique,plafond_paiement,plafond_periodique_etranger, plafond_paiement_etranger)
+        VALUES ('carte electron',30,1000,500,800,300);
 INSERT INTO types_carte (nom, cotisations, plafond_periodique,plafond_paiement,plafond_periodique_etranger, plafond_paiement_etranger)
         VALUES ('carte de paiement',30,6000,700,4000,500);
