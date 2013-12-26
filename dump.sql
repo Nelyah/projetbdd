@@ -79,8 +79,9 @@ CREATE TABLE types_carte (
 -- Table cartes
 -- -----------------------------------------------------
 CREATE TABLE cartes (
-  id VARCHAR(16) NOT NULL,
+  id SERIAL NOT NULL,
   type_carte_id INTEGER NOT NULL,
+  numero VARCHAR(16) NOT NULL,
   compte_id INTEGER NOT NULL,
   date_exp DATE NOT NULL,
   num_securite INTEGER NOT NULL,
