@@ -213,7 +213,7 @@ INSERT INTO types_compte (id, type)
 VALUES (2, 'livret jeune');
 
 INSERT INTO types_compte (id, type) 
-VALUES (2, 'compte joint');
+VALUES (3, 'compte joint');
 
 INSERT INTO types_operation (id, type) 
 VALUES (1, 'virement');
