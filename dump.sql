@@ -30,6 +30,9 @@ CREATE TABLE types_compte (
   id SERIAL NOT NULL,
   type VARCHAR(150) NOT NULL,
   taux_interet FLOAT NOT NULL DEFAULT 0,
+  forfait_virement_ajout FLOAT NOT NULL DEFAULT 0,
+  forfait_virement FLOAT NOT NULL DEFAULT 0,
+  forfait_virement_periodique FLOAT NOT NULL DEFAULT 0,
   CONSTRAINT chk_taux_interet CHECK (taux_interet >= 0),
   PRIMARY KEY (id));
 
@@ -174,23 +177,23 @@ CREATE TABLE virements_periodique (
   id SERIAL NOT NULL,
   periode INTEGER NOT NULL DEFAULT 1,
   jour INTEGER NOT NULL DEFAULT 1,
-  date_debut DATE NOT NULL,
+  date_debut DATE NOT NULL DEFAULT current_date,
   date_suivante DATE NOT NULL,
   date_fin DATE NULL,
   montant REAL NOT NULL,
-  source INTEGER NOT NULL,
-  destination INTEGER NOT NULL,
+  source_id INTEGER NOT NULL,
+  destination_id INTEGER NOT NULL,
   PRIMARY KEY (id),
   CONSTRAINT chk_periode CHECK (periode >= 1),
   CONSTRAINT chk_jour CHECK (jour >= 1),
   CONSTRAINT chk_montant CHECK (montant >= 1),
   CONSTRAINT fk_virement_periodique_compte1
-    FOREIGN KEY (source)
+    FOREIGN KEY (source_id)
     REFERENCES comptes (id)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT fk_virement_periodique_compte2
-    FOREIGN KEY (destination)
+    FOREIGN KEY (destination_id)
     REFERENCES comptes (id)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);
@@ -216,7 +219,7 @@ INSERT INTO types_operation (id, type)
 VALUES (4, 'forfait virement');
 
 INSERT INTO types_operation (id, type) 
-VALUES (5, 'forfait virement set');
+VALUES (5, 'forfait virement ajout');
 
 INSERT INTO types_operation (id, type) 
 VALUES (6, 'paiement');
