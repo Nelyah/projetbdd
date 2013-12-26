@@ -212,29 +212,32 @@ VALUES (1, 'compte courant');
 INSERT INTO types_compte (id, type) 
 VALUES (2, 'livret jeune');
 
-INSERT INTO types_operation (id, type) 
-VALUES (3, 'virement');
+INSERT INTO types_compte (id, type) 
+VALUES (2, 'compte joint');
 
 INSERT INTO types_operation (id, type) 
-VALUES (4, 'forfait virement');
+VALUES (1, 'virement');
 
 INSERT INTO types_operation (id, type) 
-VALUES (5, 'forfait virement ajout');
+VALUES (2, 'forfait virement');
 
 INSERT INTO types_operation (id, type) 
-VALUES (6, 'paiement');
+VALUES (3, 'forfait virement ajout');
 
 INSERT INTO types_operation (id, type) 
-VALUES (7, 'retrait');
+VALUES (4, 'paiement');
 
 INSERT INTO types_operation (id, type) 
-VALUES (8, 'cheque');
+VALUES (5, 'retrait');
 
 INSERT INTO types_operation (id, type) 
-VALUES (9, 'interet');
+VALUES (6, 'cheque');
 
 INSERT INTO types_operation (id, type) 
-VALUES (10, 'agios');
+VALUES (7, 'interet');
+
+INSERT INTO types_operation (id, type) 
+VALUES (9, 'agios');
 
 INSERT INTO types_carte (id, nom, cotisations, plafond_periodique,plafond_paiement,plafond_periodique_etranger, plafond_paiement_etranger)
 VALUES (1, 'carte de retrait', 15, 300, 50, 200, 40);
