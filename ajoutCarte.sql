@@ -9,16 +9,16 @@ BEGIN
 	SELECT id
 	INTO v_numero
 	FROM (
-		SELECT COALESCE(MIN(TO_NUMBER(id, '9999999999999999')), 0) AS id
+		SELECT MIN(TO_NUMBER(numero, '9999999999999999')) AS numero
 		FROM cartes
 		WHERE date_exp < current_date
 		UNION
-		SELECT COALESCE(MAX(TO_NUMBER(id, '9999999999999999')) + 1, 0) AS id
+		SELECT COALESCE(MAX(TO_NUMBER(numero, '9999999999999999')) + 1, 0) AS numero
 		FROM cartes
 		WHERE date_exp >= current_date
 	) AS s
-	GROUP BY id
-    ORDER BY id DESC
+	GROUP BY numero
+    ORDER BY numero ASC
 	LIMIT 1;
 
 	SELECT LPAD((v_numero || ''), 16, '0')
@@ -74,7 +74,7 @@ BEGIN
     FROM types_carte
     WHERE nom=carte;
     SELECT cartes_generer_numero() INTO numCarte;
-    INSERT INTO cartes (id,type_carte_id,compte_id,date_exp,num_securite,plafond_periodique,plafond_paiement,plafond_periodique_etranger,plafond_paiement_etranger)
+    INSERT INTO cartes (numero,type_carte_id,compte_id,date_exp,num_securite,plafond_periodique,plafond_paiement,plafond_periodique_etranger,plafond_paiement_etranger)
         VALUES(numCarte,line.id,id_compte,CURRENT_DATE+interval'3 year',trunc(random() * (899) + 100),line.plafond_periodique,line.plafond_paiement,line.plafond_periodique_etranger,line.plafond_paiement_etranger);
 
 END;

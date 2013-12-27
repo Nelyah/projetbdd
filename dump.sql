@@ -1,4 +1,4 @@
---DROP TABLE clients CASCADE;
+DROP TABLE clients CASCADE;
 DROP TABLE IF EXISTS types_compte CASCADE;
 DROP TABLE IF EXISTS comptes CASCADE;
 DROP TABLE IF EXISTS clients CASCADE;
@@ -236,11 +236,17 @@ VALUES (9, 'interet');
 INSERT INTO types_operation (id, type) 
 VALUES (10, 'agios');
 
-INSERT INTO types_carte (id, nom, cotisations, plafond_periodique,plafond_paiement,plafond_periodique_etranger, plafond_paiement_etranger)
-VALUES (1, 'carte de retrait', 15, 300, 50, 200, 40);
+INSERT INTO types_carte (nom, cotisations, plafond_periodique,plafond_paiement,plafond_periodique_etranger, plafond_paiement_etranger)
+VALUES ('carte de retrait', 15, 300, 50, 200, 40);
 
-INSERT INTO types_carte (id, nom, cotisations, plafond_periodique,plafond_paiement,plafond_periodique_etranger, plafond_paiement_etranger)
-VALUES (2, 'carte de paiement', 30, 6000, 700, 4000, 500);
+INSERT INTO types_carte (nom, cotisations, plafond_periodique,plafond_paiement,plafond_periodique_etranger, plafond_paiement_etranger)
+VALUES ('carte electron', 20, 300, 50, 200, 40);
+
+INSERT INTO types_carte (nom, cotisations, plafond_periodique,plafond_paiement,plafond_periodique_etranger, plafond_paiement_etranger)
+VALUES ('carte débit différé', 50, 0, 0, 0, 0);
+
+INSERT INTO types_carte (nom, cotisations, plafond_periodique,plafond_paiement,plafond_periodique_etranger, plafond_paiement_etranger)
+VALUES ('carte de paiement', 30, 6000, 700, 4000, 500);
 
 INSERT INTO clients (id, nom, prenom, genre, adresse, mail)
 VALUES (1, 'Desravines', 'Jean', 'M', '101 rue de Paris', 'jean.desravines@paris7.fr');

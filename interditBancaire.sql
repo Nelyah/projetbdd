@@ -14,8 +14,8 @@ BEGIN
                     WHERE client_id=id_client)
         AND type_carte_id <> (SELECT id
                                 FROM types_carte
-                                WHERE nom ='carte de retrait')
-                                    OR nom = 'carte electron';
+                                WHERE nom ='carte de retrait'
+                                    OR nom = 'carte electron');
 
     INSERT INTO interdit_bancaire (id_client, motif,date_interdit)
         VALUES (id_client,raison,CURRENT_DATE);
