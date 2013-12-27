@@ -19,8 +19,9 @@ DECLARE
 
 	v_solde comptes.solde%TYPE;
 	v_decouvert_auto_banque comptes.decouvert_auto_banque%TYPE;
-	v_type_operation types_operation.id%TYPE;
 	v_forfait types_compte.forfait_virement_periodique%TYPE;
+	v_type_operation_forfait types_operation.id%TYPE;
+	v_type_operation_virement types_operation.id%TYPE;
 
 BEGIN
 
@@ -46,7 +47,15 @@ BEGIN
 		FROM comptes
 		WHERE id = r_virement.source_id;
 
-		RAISE NOTICE 'solde final %e', v_solde;
+		SELECT id
+		INTO v_type_operation_forfait
+		FROM types_operation
+		WHERE type LIKE 'forfait virement';
+
+		SELECT id
+		INTO v_type_operation_virement
+		FROM types_operation
+		WHERE type LIKE 'virement';
 
 		IF (v_solde >= (-v_decouvert_auto_banque)) THEN
 
@@ -60,21 +69,11 @@ BEGIN
 				solde = solde + r_virement.montant
 			WHERE id = r_virement.destination_id;
 
-			SELECT id
-			INTO v_type_operation
-			FROM types_operation
-			WHERE type LIKE 'virement';
+			INSERT INTO operations (type_operation_id, source_id, destination_id, montant)
+			VALUES (v_type_operation_virement, r_virement.source_id, r_virement.destination_id, r_virement.montant);
 
 			INSERT INTO operations (type_operation_id, source_id, destination_id, montant)
-			VALUES (v_type_operation, r_virement.source_id, r_virement.destination_id, r_virement.montant);
-
-			SELECT id
-			INTO v_type_operation
-			FROM types_operation
-			WHERE type LIKE 'forfait virement';
-
-			INSERT INTO operations (type_operation_id, source_id, destination_id, montant)
-			VALUES (v_type_operation, r_virement.source_id, NULL, v_forfait);
+			VALUES (v_type_operation_forfait, r_virement.source_id, NULL, v_forfait);
 
 		END IF;
 
