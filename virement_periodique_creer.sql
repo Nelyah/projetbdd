@@ -19,7 +19,6 @@ DECLARE
 	v_interval_jours INTEGER;
 	v_jour INTEGER;
 	v_mois INTEGER;
-	v_annee INTEGER;
 
 BEGIN 
 	
@@ -58,9 +57,6 @@ BEGIN
 	SELECT date_part('month', current_timestamp)
 	INTO v_mois;
 
-	SELECT date_part('year', current_timestamp)
-	INTO v_annee;
-
 	SELECT forfait_virement_ajout
 	INTO v_montant
 	FROM comptes, types_compte
@@ -73,19 +69,16 @@ BEGIN
 
 	-- Si le jour est depassé
 	IF v_jour > p_jour THEN
-		-- si on est en decembre ce sera l'année d'apres
-		IF v_mois = 12 THEN
-			-- AJout d'un moi
-			SELECT v_date_suivante + INTERVAL '1 month'
-			INTO v_date_suivante;
-
-			-- on retire l'interval de jour
-			v_interval_jours = v_jour - p_jour;
-
-			SELECT v_date_suivante - (v_interval_jours || ' days')::INTERVAL
-			INTO v_date_suivante;
-		END IF;
+		-- Ajout d'un mois
+		SELECT v_date_suivante + INTERVAL '1 month'
+		INTO v_date_suivante;
 	END IF;
+
+	-- on retire l'interval de jour
+	v_interval_jours = v_jour - p_jour;
+
+	SELECT v_date_suivante - (v_interval_jours || ' days')::INTERVAL
+	INTO v_date_suivante;
 
 	SELECT id
 	INTO v_type_operation
