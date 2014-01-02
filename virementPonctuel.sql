@@ -1,3 +1,6 @@
+-- Le but de cette fonction est d'effectuer un virement ponctuel d'un compte vers un autre
+-- Le compte de destination est spécifié par son iban_et son bic. 
+
 CREATE OR REPLACE FUNCTION virementPonctuel(dest_iban INTEGER,dest_bic INTEGER,id_compte INTEGER, id_client INTEGER, montant_vir INTEGER) RETURNS VOID AS $$
 DECLARE
     dest_id_compte INTEGER;

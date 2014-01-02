@@ -1,3 +1,5 @@
+-- Cette fonction doit être effectuée en début de mois, afin de pouvoir
+-- calculer les intérêts du compte
 CREATE OR REPLACE FUNCTION interet() RETURNS VOID AS $$
 DECLARE
 BEGIN

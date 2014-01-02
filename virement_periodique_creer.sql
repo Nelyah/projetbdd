@@ -10,7 +10,7 @@ CREATE OR REPLACE FUNCTION virement_periodique_creer(p_id_source comptes.id%TYPE
 RETURNS VOID AS $$
 
 DECLARE
-	v_compte_courrant comptes.id%TYPE;
+	v_compte_courant comptes.id%TYPE;
 	v_compte_id comptes.id%TYPE;
 	v_type_operation types_operation.id%TYPE;
 	v_montant operations.montant%TYPE;
@@ -22,19 +22,19 @@ DECLARE
 
 BEGIN 
 	
-	v_compte_courrant = p_id_source;
+	v_compte_courant = p_id_source;
 	
 	SELECT id
 	INTO v_compte_id
 	FROM comptes
-	WHERE id = v_compte_courrant;
+	WHERE id = v_compte_courant;
 	
-	v_compte_courrant = p_id_destination;
+	v_compte_courant = p_id_destination;
 	
 	SELECT id
 	INTO v_compte_id
 	FROM comptes
-	WHERE id = v_compte_courrant;
+	WHERE id = v_compte_courant;
 
 	IF p_montant < 0 THEN
 		RAISE EXCEPTION 'Le montant de retrait ne peux etre negatif';
@@ -94,7 +94,7 @@ BEGIN
 
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
-        RAISE EXCEPTION 'Le compte % n''existe pas', v_compte_courrant;
+        RAISE EXCEPTION 'Le compte % n''existe pas', v_compte_courant;
 
 END;
 $$ LANGUAGE PLPGSQL;
