@@ -12,18 +12,48 @@ DECLARE
 	v_depenses REAL;
 	v_plafond cartes.plafond_periodique%TYPE;
 	v_type_operation types_operation.id%TYPE;
+	v_type_carte types_carte.nom%TYPE;
+	v_id_client interdit_bancaire.id_client%TYPE;
 
 BEGIN
+
+	-- Recuperation du numero de cartes et du compte lié
+	-- Une esceptino sera levée si le numero de carte ne correspond a aucun compte
 	SELECT cartes.id, comptes.id
 	INTO v_id_carte, v_id_compte
 	FROM comptes, cartes
 	WHERE cartes.compte_id = comptes.id
 	AND cartes.id = p_id_carte;
 
+	-- Recuperation de l'id client si il est interdit bancaire
+	SELECT COALESCE(interdit_bancaire.id_client, NULL)
+	INTO v_id_client
+	FROM interdit_bancaire, comptes, cartes, titulaires
+	WHERE interdit_bancaire.id_client :: INTEGER = titulaires.client_id
+	AND titulaires.compte_id = comptes.id
+	AND cartes.compte_id = comptes.id
+	AND cartes.id = p_id_carte;
+
+	-- si le client est interdit bancaire alors v_id_client ne sera pas NULL
+	IF v_id_client IS NOT NULL THEN
+		-- Recuperation du nom du type de la carte
+		-- les electron et carte de retrati peuvent etre utilisé pendant un interdit bancaire
+		SELECT nom
+		INTO v_type_carte
+		FROM types_carte, cartes
+		WHERE types_carte.id = cartes.type_carte_id
+		AND cartes.id = p_id_carte;
+
+		IF v_type_carte <> 'carte de retrait' AND v_type_carte <> 'carte electron' THEN
+			RAISE EXCEPTION 'Vous ne pouvez retirer avec cette carte car vous etes interdit bancaire';
+		END IF;
+	END IF;
+
 	IF p_montant < 0 THEN
 		RAISE EXCEPTION 'Le montant de retrait ne peux etre negatif';
 	END IF;
 
+	-- Recuperation de la somme des oepration effectué pendant les 7 derniers jours
 	SELECT SUM(montant)
 	INTO v_depenses
 	FROM operations
@@ -70,8 +100,8 @@ BEGIN
 	VALUES (v_type_operation, v_id_compte, NULL, p_montant, p_id_carte);
 
 EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-        RAISE EXCEPTION 'La carte % n''existe pas ou n''est associé a aucun compte', p_id_carte;
+	WHEN NO_DATA_FOUND THEN
+		RAISE EXCEPTION 'La carte % n''existe pas ou n''est associé a aucun compte', p_id_carte;
 
 END;
 $$ LANGUAGE PLPGSQL;
