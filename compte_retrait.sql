@@ -23,6 +23,7 @@ BEGIN
 	INTO v_id_carte, v_id_compte
 	FROM comptes, cartes
 	WHERE cartes.compte_id = comptes.id
+	AND comptes.actif = 1
 	AND cartes.id = p_id_carte;
 
 	-- Recuperation de l'id client si il est interdit bancaire
