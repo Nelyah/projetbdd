@@ -4,6 +4,8 @@
 -- Elle ne doit pas être lancée plus d'une fois par mois, sinon certains paiements
 -- seront comptabilisés plusieurs fois.
 CREATE OR REPLACE FUNCTION debitDiff() RETURNS VOID AS $$
+DECLARE 
+    f_client_interdit INTEGER;
 BEGIN
 -- mise à jour de la solde des comptes en fonction de ce qui a été payé avec la 
 -- carte à débit différé
@@ -27,15 +29,17 @@ BEGIN
 
 -- On appelle la fonction "interditBancaire(client_id,'raison')" sur les comptes qui ont 
 -- dépassé la limite posée par la banque
-    SELECT interditBancaire(clause.client_id,'Dépassement du découvert autorisé')
-    FROM (SELECT client_id 
-            FROM titulaires
-            WHERE est_responsable=1
-                AND (SELECT solde 
-                    FROM comptes
-                    WHERE id=titulaires.compte_id) < (SELECT decouvert_auto_banque
-                                                        FROM comptes
-                                                        WHERE id=titulaires.compte_id) AS clause;
+    FOR f_client_interdit IN SELECT titulaires.client_id 
+                            FROM titulaires,comptes as C1
+                            WHERE titulaires.est_responsable=1
+                            AND (SELECT solde 
+                                WHERE C1.id=titulaires.compte_id) < 
+                                (SELECT 0-decouvert_auto_banque
+                                WHERE C1.id=titulaires.compte_id) 
+                            GROUP BY client_id
+    LOOP
+        PERFORM interditBancaire(f_client_interdit,'Dépassement du découvert autorisé');
+    END LOOP;
 
     
 END;

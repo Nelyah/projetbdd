@@ -3,15 +3,15 @@
 -- (3) Consultation du solde (l. 161)
 -- (4) Retrait (l. 185)
 -- (5) Trigger test_solde (l. 295)
--- (6) Calcul du débit différé. Appartient à la routine mensuelle (l. 320)
--- (7) Fermeture du compte (l. 365)
--- (8) Interdiction bancaire (l. 415)
--- (9) Interet. Appartient à la routine mensuelle (l. 450)
--- (10) Ouverture du compte (l. 469)
--- (11) Paiement (l. 523)
--- (12) Routine quotidienne (l. 721)
--- (13) Virement Périodique (l. 825)
--- (14) Virement ponctuel (l. 928)
+-- (6) Interdiction bancaire (l. 316)
+-- (7) Fermeture du compte (l. 357)
+-- (8) Calcul du débit différé. Appartient à la routine mensuelle (l. 402)
+-- (9) Interet. Appartient à la routine mensuelle (l. 457)
+-- (10) Ouverture du compte (l. 476)
+-- (11) Paiement (l. 530)
+-- (12) Routine quotidienne (l. 728)
+-- (13) Virement Périodique (l. 833)
+-- (14) Virement ponctuel (l. 935)
 
 
 --------------------------------
@@ -307,53 +307,45 @@ CREATE TRIGGER compte_tester_solde
 BEFORE INSERT OR UPDATE ON comptes
 FOR EACH ROW EXECUTE PROCEDURE compte_tester_solde();
 
+---------------------------
+-- (6) Interdiction bancaire
+---------------------------
 
------------------------------
--- (6) Calcul du débit différé
------------------------------
-
--- Cette fonction a pour but de calculer le débit différé grâce aux paiments par 
--- cartes à débit différé. Cette fonction est faite pour être exécutée à chaque 
--- début de mois, afin de calculer la somme dépensée sur le mois passé. 
--- Elle ne doit pas être lancée plus d'une fois par mois, sinon certains paiements
--- seront comptabilisés plusieurs fois.
-CREATE OR REPLACE FUNCTION debitDiff() RETURNS VOID AS $$
+-- Cette fonction a pour but d'interdire bancaire un client, pour une certaine raison.
+-- (en général un dépassement de la limite)
+CREATE OR REPLACE FUNCTION interditBancaire(f_id_client INTEGER, raison VARCHAR(256)) 
+RETURNS VOID AS $$
+DECLARE 
+    id_compte_interdit INTEGER;
 BEGIN
--- mise à jour de la solde des comptes en fonction de ce qui a été payé avec la 
--- carte à débit différé
-    UPDATE comptes
-    SET solde=solde - sommes.sum
-    -- Pour chaque source_id, la somme de ses dépenses en différé
-    FROM (SELECT source_id, SUM(montant) as sum 
-            FROM operations
-            WHERE source_id IN (SELECT compte_id 
-                                FROM cartes
-                                WHERE type_carte_id=(SELECT type_carte_id 
-                                                    FROM types_carte
-                                                    WHERE nom='carte débit différé'))
-                AND type_operation_id=(SELECT id
-                                        FROM types_operation
-                                        WHERE type='paiement différé')
-                -- On ne récupère que les opérations du mois passé
-                AND date >= (CURRENT_DATE-interval'1 month')
-            GROUP BY source_id) AS sommes
-    WHERE comptes.id=sommes.source_id;
+-- Tous les chèques du client sont supprimés
+    UPDATE comptes SET chequier=0
+    WHERE id IN (SELECT compte_id 
+                    FROM titulaires
+                    WHERE client_id = f_id_client);
 
--- On appelle la fonction "interditBancaire(client_id,'raison')" sur les comptes qui ont 
--- dépassé la limite posée par la banque
-    SELECT interditBancaire(clause.client_id,'Dépassement du découvert autorisé')
-    FROM (SELECT client_id 
-            FROM titulaires
-            WHERE est_responsable=1
-                AND (SELECT solde 
-                    FROM comptes
-                    WHERE id=titulaires.compte_id) < (SELECT decouvert_auto_banque
-                                                        FROM comptes
-                                                        WHERE id=titulaires.compte_id) AS clause;
+-- Toutes les cartes qui ne sont pas des cartes électrons ou des 
+-- cartes de retraits sont supprimées.
+    DELETE FROM cartes
+    WHERE id IN (SELECT compte_id
+                    FROM titulaires
+                    WHERE client_id=f_id_client)
+        AND type_carte_id NOT IN (SELECT id
+                                FROM types_carte
+                                WHERE nom ='carte de retrait'
+                                    OR nom = 'carte electron');
 
-    
+-- On ajoute ce client à la table d'interdit bancaire
+IF f_id_client NOT IN (SELECT id_client
+                        FROM interdit_bancaire) THEN
+        INSERT INTO interdit_bancaire (id_client, motif,date_interdit,date_regularisation)
+            VALUES (f_id_client,raison,CURRENT_DATE,CURRENT_DATE+interval'5 year');
+     END IF;
+
 END;
 $$ LANGUAGE PLPGSQL;
+
+
 
 -------------------------
 -- (7) Fermeture du compte
@@ -406,40 +398,55 @@ BEGIN
 END;
 $$ LANGUAGE PLPGSQL;
 
----------------------------
--- (8) Interdiction bancaire
----------------------------
+-----------------------------
+-- (8) Calcul du débit différé
+-----------------------------
 
--- Cette fonction a pour but d'interdire bancaire un client, pour une certaine raison.
--- (en général un dépassement de la limite)
-CREATE OR REPLACE FUNCTION interditBancaire(id_client INTEGER, raison VARCHAR(256)) 
-RETURNS VOID AS $$
+-- Cette fonction a pour but de calculer le débit différé grâce aux paiments par 
+-- cartes à débit différé. Cette fonction est faite pour être exécutée à chaque 
+-- début de mois, afin de calculer la somme dépensée sur le mois passé. 
+-- Elle ne doit pas être lancée plus d'une fois par mois, sinon certains paiements
+-- seront comptabilisés plusieurs fois.
+CREATE OR REPLACE FUNCTION debitDiff() RETURNS VOID AS $$
 DECLARE 
-    id_compte_interdit INTEGER;
+    f_client_interdit INTEGER;
 BEGIN
--- Tous les chèques du client sont supprimés
-    UPDATE comptes SET chequier=0
-    WHERE id IN (SELECT compte_id 
-                    FROM titulaires
-                    WHERE client_id = id_client);
+-- mise à jour de la solde des comptes en fonction de ce qui a été payé avec la 
+-- carte à débit différé
+    UPDATE comptes
+    SET solde=solde - sommes.sum
+    -- Pour chaque source_id, la somme de ses dépenses en différé
+    FROM (SELECT source_id, SUM(montant) as sum 
+            FROM operations
+            WHERE source_id IN (SELECT compte_id 
+                                FROM cartes
+                                WHERE type_carte_id=(SELECT type_carte_id 
+                                                    FROM types_carte
+                                                    WHERE nom='carte débit différé'))
+                AND type_operation_id=(SELECT id
+                                        FROM types_operation
+                                        WHERE type='paiement différé')
+                -- On ne récupère que les opérations du mois passé
+                AND date >= (CURRENT_DATE-interval'1 month')
+            GROUP BY source_id) AS sommes
+    WHERE comptes.id=sommes.source_id;
 
--- Toutes les cartes qui ne sont pas des cartes électrons ou des 
--- cartes de retraits sont supprimées.
-    DELETE FROM cartes
-    WHERE id IN (SELECT compte_id
-                    FROM titulaires
-                    WHERE client_id=id_client)
-        AND type_carte_id <> (SELECT id
-                                FROM types_carte
-                                WHERE nom ='carte de retrait'
-                                    OR nom = 'carte electron');
-
--- On ajoute ce client à la table d'interdit bancaire
-    INSERT INTO interdit_bancaire (id_client, motif,date_interdit)
-        VALUES (id_client,raison,CURRENT_DATE);
-
+-- On appelle la fonction "interditBancaire(client_id,'raison')" sur les comptes qui ont 
+-- dépassé la limite posée par la banque
+    FOR f_client_interdit IN SELECT titulaires.client_id 
+                            FROM titulaires,comptes as C1
+                            WHERE titulaires.est_responsable=1
+                            AND (SELECT solde 
+                                WHERE C1.id=titulaires.compte_id) < 
+                                (SELECT 0-decouvert_auto_banque
+                                WHERE C1.id=titulaires.compte_id) 
+                            GROUP BY client_id
+    LOOP
+        PERFORM interditBancaire(f_client_interdit,'Dépassement du découvert autorisé');
+    END LOOP;
 END;
 $$ LANGUAGE PLPGSQL;
+
 
 -------------
 -- (9) Interet
