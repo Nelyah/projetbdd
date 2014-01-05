@@ -11,17 +11,29 @@ DECLARE
     typeOperation_id INTEGER;
     typePaiement VARCHAR(256);
     montantPerio INTEGER;
+    f_id_carte INTEGER;
 
 BEGIN
     IF numCarte='cheque'
     THEN typePaiement=numCarte;
     ELSE
+        SELECT id INTO f_id_carte
+        FROM cartes
+        WHERE numero=numCarte
+        AND date_exp>CURRENT_DATE;
+
+-- Vérification si le client possède cette carte sur ce compte
+        IF f_id_carte IS NULL THEN
+            RAISE EXCEPTION 'Vous ne possédez pas cette carte';
+        END IF;
+        
         SELECT nom INTO typePaiement
         FROM types_carte
         WHERE id = (SELECT type_carte_id
                     FROM cartes
-                    WHERE id=numCarte);
+                    WHERE id=f_id_carte);
     END IF;
+
 
 -- Vérification que le compte source existe bien
     testExists=1;
@@ -82,14 +94,6 @@ BEGIN
         RETURN;
     END IF;
 
--- Vérification si le client possède cette carte sur ce compte
-    SELECT id INTO compteNumCarte
-    FROM cartes
-    WHERE compte_id = compte_source;
-    IF compteNumCarte IS NULL
-    THEN RAISE EXCEPTION 'Vous ne possédez pas cette carte';
-        RETURN;
-    END IF;
 
 -- Dans le cas d'un paiement par carte à début différé
     IF typePaiement='carte débit différé'
@@ -98,7 +102,7 @@ BEGIN
         FROM types_operation
         WHERE type='paiement différé';
         INSERT INTO operations (type_operation_id,date,montant,source_id,destination_id,extra)
-                VALUES (typeOperation_id, CURRENT_DATE, montantPaiement, compte_source, compte_dest, numCarte);
+                VALUES (typeOperation_id, CURRENT_DATE, montantPaiement, compte_source, compte_dest, f_id_carte);
         UPDATE comptes SET solde = solde + montantPaiement WHERE id = compte_dest;
         RETURN;
 
@@ -109,31 +113,31 @@ BEGIN
         FROM operations
         WHERE type_operation_id = (
             SELECT id
-            FROM type_operation
-            WHERE type= 'paiement';
+            FROM types_operation
+            WHERE types_operation.type='paiement'
         )
-            AND extra = numCarte
-            AND date > CURRENT_DATE-interval '1 week';
+        AND operations.extra = f_id_carte
+        AND date > CURRENT_DATE-interval '1 week';
     -- Vérification du non-dépassement du plafond de paiement
         IF montantPaiement > (SELECT plafond_paiement
                                             FROM cartes
-                                            WHERE id = numCarte)
+                                            WHERE id = f_id_carte)
         THEN RAISE EXCEPTION 'Paiement refusé (votre paiement est trop élevé)';
             RETURN;
         END IF;
     -- Vérification du non-dépassement du montant périodique
         IF montantPerio + montantPaiement > (SELECT plafond_periodique
                                             FROM cartes
-                                            WHERE id = numCarte)
+                                            WHERE id = f_id_carte)
         THEN RAISE EXCEPTION 'Paiement refusé (plafond periodique dépassé)';
             RETURN;
         END IF;
 
         SELECT id INTO typeOperation_id
         FROM types_operation
-        WHERE type='paiement carte';
+        WHERE type='paiement';
         INSERT INTO operations (type_operation_id,date,montant,source_id,destination_id,extra)
-                VALUES (typeOperation_id, CURRENT_DATE, montantPaiement, compte_source, compte_dest, numCarte);
+                VALUES (typeOperation_id, CURRENT_DATE, montantPaiement, compte_source, compte_dest, f_id_carte);
         UPDATE comptes SET solde = solde - montantPaiement WHERE id = compte_source;
         UPDATE comptes SET solde = solde + montantPaiement WHERE id = compte_dest;
 -- Dans le cas d'un paiement par carte électron
@@ -142,15 +146,15 @@ BEGIN
         SELECT SUM(montant) INTO montantPerio
         FROM operations
         WHERE type_operation_id = (SELECT id
-                                    FROM type_operation
-                                    WHERE type= 'paiement');
-            AND extra = numCarte
+                                    FROM types_operation
+                                    WHERE type= 'paiement')
+            AND extra = f_id_carte
             AND date > CURRENT_DATE-interval '1 week';
 
     -- Vérification du non-dépassement du plafond de paiement
         IF montantPaiement > (SELECT plafond_paiement
                                             FROM cartes
-                                            WHERE id = numCarte)
+                                            WHERE id = f_id_carte)
         THEN RAISE EXCEPTION 'Paiement refusé (votre paiement est trop élevé)';
             RETURN;
         END IF;
@@ -158,7 +162,7 @@ BEGIN
     -- Vérification du non-dépassement du montant périodique
         IF montantPerio + montantPaiement > (SELECT plafond_periodique
                                             FROM cartes
-                                            WHERE id = numCarte)
+                                            WHERE id = f_id_carte)
         THEN RAISE EXCEPTION 'Paiement refusé (plafond periodique dépassé)';
             RETURN;
         END IF;
@@ -172,9 +176,9 @@ BEGIN
         ELSE -- Paiement
             SELECT id INTO typeOperation_id
             FROM types_operation
-            WHERE type='paiement carte';
+            WHERE type='paiement';
             INSERT INTO operations (type_operation_id,date,montant,source_id,destination_id, extra)
-                                VALUES (typeOperation_id, CURRENT_DATE, montantPaiement, compte_source, compte_dest, numCarte);
+                                VALUES (typeOperation_id, CURRENT_DATE, montantPaiement, compte_source, compte_dest, f_id_carte);
             UPDATE comptes SET solde = solde - montantPaiement WHERE id = compte_source;
             UPDATE comptes SET solde = solde + montantPaiement WHERE id = compte_dest;
         END IF;

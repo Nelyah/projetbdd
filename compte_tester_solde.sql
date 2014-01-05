@@ -6,7 +6,7 @@ CREATE OR REPLACE FUNCTION compte_tester_solde()
 RETURNS trigger AS $$
 BEGIN
     IF NEW.solde < NEW.decouvert_auto_banque THEN
-        RAISE EXCEPTION 'solde < decouvert autorisé par la banque';
+        RAISE EXCEPTION 'solde inférieur au decouvert autorisé par la banque';
     END IF;
 
     RETURN NEW;
