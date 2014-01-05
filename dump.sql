@@ -199,21 +199,26 @@ CREATE TABLE virements_periodique (
     ON UPDATE NO ACTION);
 
 CREATE TABLE interdit_bancaire(
+    id SERIAL NOT NULL,
     banque VARCHAR DEFAULT CURRENT_USER,
-    id_client INTEGER PRIMARY KEY,
+    id_client INTEGER,
     motif varchar,
     date_interdit DATE,
-    date_regularisation DATE DEFAULT NULL
+    date_regularisation DATE DEFAULT NULL,
+    PRIMARY KEY(id),
+    CONSTRAINT fk_id_client
+      FOREIGN KEY (id_client)
+      REFERENCES clients(id)
 );
 
-INSERT INTO types_compte (id, type) 
-VALUES (1, 'compte courant');
+INSERT INTO types_compte (type, taux_interet,forfait_virement,forfait_virement_periodique) 
+VALUES ('compte courant',2,5,3);
 
-INSERT INTO types_compte (id, type) 
-VALUES (2, 'livret jeune');
+INSERT INTO types_compte (type, taux_interet,forfait_virement,forfait_virement_periodique) 
+VALUES ('livret jeune',5,10,4);
 
-INSERT INTO types_compte (id, type) 
-VALUES (3, 'compte joint');
+INSERT INTO types_compte (type, taux_interet,forfait_virement,forfait_virement_periodique) 
+VALUES ('compte joint',2,5,3);
 
 INSERT INTO types_operation (type) 
 VALUES ('virement');
@@ -254,23 +259,23 @@ VALUES ('carte débit différé', 50, 0, 0, 0, 0);
 INSERT INTO types_carte (nom, cotisations, plafond_periodique,plafond_paiement,plafond_periodique_etranger, plafond_paiement_etranger)
 VALUES ('carte de paiement', 30, 6000, 700, 4000, 500);
 
-INSERT INTO clients (id, nom, prenom, genre, adresse, mail)
-VALUES (1, 'Desravines', 'Jean', 'M', '101 rue de Paris', 'jean.desravines@paris7.fr');
+INSERT INTO clients (nom, prenom, genre, adresse, mail)
+VALUES ('Desravines', 'Jean', 'M', '101 rue de Paris', 'jean.desravines@paris7.fr');
 
-INSERT INTO clients (id, nom, prenom, genre, adresse, mail)
-VALUES (2, 'Dequeker', 'Chloé', 'F', '12 rue de Paris', 'chloe.dequeker@paris7.fr');
+INSERT INTO clients (nom, prenom, genre, adresse, mail)
+VALUES ('Dequeker', 'Chloé', 'F', '12 rue de Paris', 'chloe.dequeker@paris7.fr');
 
-INSERT INTO clients (id, nom, prenom, genre, adresse, mail)
-VALUES (3, 'Foo', 'Bar', 'M', '12 avenue de Lyon', 'bar.foo@paris7.fr');
+INSERT INTO clients (nom, prenom, genre, adresse, mail)
+VALUES ('Foo', 'Bar', 'M', '12 avenue de Lyon', 'bar.foo@paris7.fr');
 
-INSERT INTO comptes (id, type_compte_id, actif, solde, decouvert_auto, decouvert_auto_banque, chequier, iban, bic)
-VALUES (1, 1, 1, 5040, 300, 350, 1, '1', '1');
+INSERT INTO comptes (type_compte_id, actif, solde, decouvert_auto, decouvert_auto_banque, chequier, iban, bic)
+VALUES (1, 1, 5040, 300, 350, 1, '1', '1');
 
-INSERT INTO comptes (id, type_compte_id, actif, solde, decouvert_auto, decouvert_auto_banque, chequier, iban, bic)
-VALUES (2, 2, 1, 20, 0, 0, 1, '2', '2');
+INSERT INTO comptes (type_compte_id, actif, solde, decouvert_auto, decouvert_auto_banque, chequier, iban, bic)
+VALUES (2, 1, 20, 0, 0, 1, '2', '2');
 
-INSERT INTO comptes (id, type_compte_id, actif, solde, decouvert_auto, decouvert_auto_banque, chequier, iban, bic)
-VALUES (3, 1, 1, 2000, 300, 350, 0, '3', '3');
+INSERT INTO comptes (type_compte_id, actif, solde, decouvert_auto, decouvert_auto_banque, chequier, iban, bic)
+VALUES (1, 1, 2000, 300, 350, 0, '3', '3');
 
 INSERT INTO titulaires (client_id, compte_id, est_responsable, est_mandataire)
 VALUES (1, 1, 1, 0);
@@ -287,18 +292,18 @@ VALUES (1, 3, 1, 0);
 INSERT INTO titulaires (client_id, compte_id, est_responsable, est_mandataire)
 VALUES (2, 3, 1, 0);
 
-INSERT INTO cartes (id, type_carte_id, compte_id, numero, date_exp, num_securite, plafond_periodique, plafond_paiement, plafond_periodique_etranger, plafond_paiement_etranger)
-VALUES (1, 2, 1, '0000000000000000', '2015-06-14', '123', 2000, 1000, 1000, 500);
+INSERT INTO cartes (type_carte_id, compte_id, numero, date_exp, num_securite, plafond_periodique, plafond_paiement, plafond_periodique_etranger, plafond_paiement_etranger)
+VALUES (2, 1, '0000000000000000', '2015-06-14', '123', 2000, 1000, 1000, 500);
 
-INSERT INTO cartes (id, type_carte_id, compte_id, numero, date_exp, num_securite, plafond_periodique, plafond_paiement, plafond_periodique_etranger, plafond_paiement_etranger)
-VALUES (2, 1, 1, '0000000000000001', '2015-07-15', '123', 2000, 1000, 1000, 500);
+INSERT INTO cartes (type_carte_id, compte_id, numero, date_exp, num_securite, plafond_periodique, plafond_paiement, plafond_periodique_etranger, plafond_paiement_etranger)
+VALUES (1, 1, '0000000000000001', '2015-07-15', '123', 2000, 1000, 1000, 500);
 
-INSERT INTO cartes (id, type_carte_id, compte_id, numero, date_exp, num_securite, plafond_periodique, plafond_paiement, plafond_periodique_etranger, plafond_paiement_etranger)
-VALUES (3, 1, 2, '0000000000000002', '2014-01-14', '234', 2500, 1500, 900, 300);
+INSERT INTO cartes (type_carte_id, compte_id, numero, date_exp, num_securite, plafond_periodique, plafond_paiement, plafond_periodique_etranger, plafond_paiement_etranger)
+VALUES (1, 2, '0000000000000002', '2014-01-14', '234', 2500, 1500, 900, 300);
 
-INSERT INTO cartes (id, type_carte_id, compte_id, numero, date_exp, num_securite, plafond_periodique, plafond_paiement, plafond_periodique_etranger, plafond_paiement_etranger)
-VALUES (4, 2, 2, '0000000000000003', '2014-07-15', '567', 2500, 1500, 900, 300);
+INSERT INTO cartes (type_carte_id, compte_id, numero, date_exp, num_securite, plafond_periodique, plafond_paiement, plafond_periodique_etranger, plafond_paiement_etranger)
+VALUES (2, 2, '0000000000000003', '2014-07-15', '567', 2500, 1500, 900, 300);
 
-INSERT INTO cartes (id, type_carte_id, compte_id, numero, date_exp, num_securite, plafond_periodique, plafond_paiement, plafond_periodique_etranger, plafond_paiement_etranger)
-VALUES (5, 2, 3, '0000000000000004', '2016-07-15', '367', 6000, 4500, 100, 200);
+INSERT INTO cartes (type_carte_id, compte_id, numero, date_exp, num_securite, plafond_periodique, plafond_paiement, plafond_periodique_etranger, plafond_paiement_etranger)
+VALUES (2, 3, '0000000000000004', '2016-07-15', '367', 6000, 4500, 100, 200);
 
