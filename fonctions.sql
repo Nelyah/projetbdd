@@ -1,3 +1,8 @@
+-- Chloé Dequeker
+-- Jean Desravines
+
+
+
 -- (1) Générer une carte bancaire (l. 24 et l. 57)
 -- (2) Ajout d'un chéquier (l. 116)
 -- (3) Consultation du solde (l. 161)

@@ -1,3 +1,9 @@
+-- Chloé Dequeker
+-- Jean Desravines
+
+
+
+
 DROP TABLE IF EXISTS clients CASCADE;
 DROP TABLE IF EXISTS types_compte CASCADE;
 DROP TABLE IF EXISTS comptes CASCADE;
